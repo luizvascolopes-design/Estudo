@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="theme-color" content="#1e88e5">
+<title>Planner de Estudos</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body { font-family: Arial, sans-serif; background:#111; color:#fff; margin:0; }
+header {
+  background: linear-gradient(135deg, #1e88e5, #1565c0);
+  padding:20px;
+  text-align:center;
+}
+select { width:90%; margin:10px auto; display:block; padding:8px; border-radius:8px; border:none; }
+.week { display:grid; grid-template-columns: repeat(4,1fr); gap:6px; padding:10px; }
+.week button { background:#222; color:#fff; border:none; padding:10px; border-radius:8px; }
+.card { background:#1c1c1c; margin:10px; padding:15px; border-radius:12px; }
+label { display:flex; justify-content:space-between; align-items:center; margin:8px 0; }
+progress { width:100%; height:15px; margin-top:10px; }
+input[type=time] { background:#222; color:#fff; border:none; border-radius:5px; }
+.meta { font-size:14px; color:#90caf9; margin-top:8px; }
+progress {
+  appearance: none;
+  -webkit-appearance: none;
+  transition: all 0.15s ease-in-out; /* deixa bem mais rápida */
+}
+
+progress::-webkit-progress-bar {
+  background-color: #333;
+  border-radius: 10px;
+}
+
+progress::-webkit-progress-value {
+  background-color: #1e88e5;
+  border-radius: 10px;
+  transition: width 0.08s ease-in-out; /* anima só a barra */
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>Planner de Estudos</h1>
+  <p>Progresso salvo por mês</p>
+</header>
+
+<select id="mes" onchange="trocarMes()">
+<option value="Jan">Janeiro</option>
+<option value="Fev">Fevereiro</option>
+<option value="Mar">Março</option>
+<option value="Abr">Abril</option>
+<option value="Mai">Maio</option>
+<option value="Jun">Junho</option>
+<option value="Jul">Julho</option>
+<option value="Ago">Agosto</option>
+<option value="Set">Setembro</option>
+<option value="Out">Outubro</option>
+<option value="Nov">Novembro</option>
+<option value="Dez">Dezembro</option>
+</select>
+
+<div class="week">
+<button onclick="showDay('dom')">Dom</button>
+<button onclick="showDay('seg')">Seg</button>
+<button onclick="showDay('ter')">Ter</button>
+<button onclick="showDay('qua')">Qua</button>
+<button onclick="showDay('qui')">Qui</button>
+<button onclick="showDay('sex')">Sex</button>
+<button onclick="showDay('sab')">Sáb</button>
+
+</div>
+
+<div id="content"></div>
+
+<script>
+const estudos = {
+  dom:['Leitura Juizes','Tecnica Violao','Leitura Musical','Repertorio','Tirar Musica de Ouvido','Respiracao','Vocalizes','Apostila de Hamonia','Ingles','Teologia Basica','Estudo Biblico (Tp1)','Cubo Magico','Curso Violao','Desenho (Assistir a Aula)','Curso Lideranca','Apostila Lideranca','Estudo Pregacao'],
+  seg:['Leitura Juizes','Tecnica Violao','Leitura Musical','Respiracao','Vocalizes','Estudo Biblico (Revisao Tp1)','Cubo Magico','Xadrez','Teologia Basica (Leitura da Apostila)','Curso de Pregacao','Apostila Gestao de Pessoas','Apostila Gestao de Projetos','Percepcao Intervalos','Ingles','Apostila Teoria Musical','Estudo Pregacao','Desenho (Desenhar)'],
+  ter:['Leitura Juizes','Respiracao','Vocalizes','Tecnica Violao','Leitura Musical','Percepcao Ditados Melodicos','Livo de Teologia','Jornada Biblica','Estudo Biblico (Tp2)','Ingles','Cubo Magico','Desenho (Revisao)','Apostila de Hamonia'],
+  qua:['Leitura Juizes','Respiracao','Vocalizes','Tecnica Violao','Leitura Musical','Curso de Canto','Repertorio','Cubo Magico','Musculacao','Xadrez','Percepcao Acordes','Ingles','Teologia Basica (Leitura da Apostila)','Estudo Biblico (Revisao Tp2)','Apostila Estrategia','Financas','Estudo Pregacao'],
+  qui:['Leitura Juizes','Respiracao','Vocalizes','Tecnica Violao','Leitura Musical','Improvisacao','Apostila de Hamonia','Percepcao (Progressao de Acordes)','Livro Teologia','Interpretacao Biblica','Estudo Biblico Revisao (Tp3)','Ingles','Apostila Teoria Musical','Cubo Magico','Eletricista','Desenho (Pintar)','Apostila Comunicacao','Estudo Pregacao'],
+  sex:['Leitura Juizes','Respiracao','Vocalizes','Tecnica Violao','Leitura Musical','Repertorio','Teologia Basica (Leitura da Apostila)', 'Estudo Biblico (Revisao Tp3)','Percepcao (Escalas)','Ingles','Xadrez','Cubo Magico','Apostila Tecnologia','Estudo Pregacao'],
+  sab:['Descanso'],
+  
+};
+
+let currentDay = null;
+let currentMonth = document.getElementById('mes').value;
+
+function trocarMes(){
+  currentMonth = document.getElementById('mes').value;
+  if(currentDay) showDay(currentDay);
+}
+
+function nomeDiaCompleto(day){
+  return {
+    seg:'Segunda-feira',
+    ter:'Terça-feira',
+    qua:'Quarta-feira',
+    qui:'Quinta-feira',
+    sex:'Sexta-feira',
+    sab:'Sábado',
+    dom:'Domingo'
+  }[day];
+}
+
+function datasDoDiaNoMes(day){
+  const mapa = {dom:0, seg:1, ter:2, qua:3, qui:4, sex:5, sab:6};
+  const meses = {Jan:0, Fev:1, Mar:2, Abr:3, Mai:4, Jun:5, Jul:6, Ago:7, Set:8, Out:9, Nov:10, Dez:11};
+
+  const ano = new Date().getFullYear();
+  const mes = meses[currentMonth];
+  const alvo = mapa[day];
+
+  let datas = [];
+  let d = new Date(ano, mes, 1);
+
+  while(d.getMonth() === mes){
+    if(d.getDay() === alvo) datas.push(new Date(d));
+    d.setDate(d.getDate() + 1);
+  }
+  return datas;
+}
+
+function showDay(day){
+  currentDay = day;
+  const datas = datasDoDiaNoMes(day);
+  let html = '';
+
+  datas.forEach(data=>{
+    const chave = `${currentMonth}_${day}_${data.toISOString().split('T')[0]}`;
+    const saved = JSON.parse(localStorage.getItem(chave)) || {};
+    let concluidos = 0;
+
+    html += `<div class="card">
+      <h2>${nomeDiaCompleto(day)} - ${data.toLocaleDateString('pt-BR')}</h2>`;
+
+    estudos[day].forEach((m,i)=>{
+      if(saved['c'+i]) concluidos++;
+      html += `
+      <label>${m}
+        <span>
+          <input type="time" value="${saved['t'+i]||''}"
+           onchange="saveTimeData('${chave}',${i},this.value)">
+          <input type="checkbox" ${saved['c'+i]?'checked':''}
+           onchange="saveCheckData('${chave}',${i},this.checked)">
+        </span>
+      </label>`;
+    });
+
+    html += `<progress max="${estudos[day].length}" value="${concluidos}"></progress>
+    <div class="meta">${concluidos}/${estudos[day].length} concluídos</div></div>`;
+  });
+
+  document.getElementById('content').innerHTML = html;
+}
+
+function saveCheckData(chave,i,v){
+  const d = JSON.parse(localStorage.getItem(chave))||{};
+  d['c'+i]=v;
+  localStorage.setItem(chave,JSON.stringify(d));
+}
+
+function saveTimeData(chave,i,v){
+  const d = JSON.parse(localStorage.getItem(chave))||{};
+  d['t'+i]=v;
+  localStorage.setItem(chave,JSON.stringify(d));
+}
+</script>
+
+</body>
+</html>
